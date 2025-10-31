@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: fullstack_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev123
+      POSTGRES_DB: fullstackdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    container_name: fullstack_api
+    build:
+      context: .
+      dockerfile: back/src/FullstackApp.Api/Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      JWT_Key: ${JWT_KEY}
+      JWT_Issuer: ${JWT_ISSUER}
+      JWT_Audience: ${JWT_AUDIENCE}
+      JWT_ExpireMinutes: ${JWT_EXPIRE_MINUTES}
+      SwaggerSecurity_User: ${SWAGGERSECURITY_USER}
+      SwaggerSecurity_Password: ${SWAGGERSECURITY_PASSWORD}
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+
+  web:
+    container_name: fullstack_web
+    build:
+      context: ./front/fullstack-web
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
